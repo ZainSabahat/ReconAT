@@ -17,13 +17,14 @@ except ImportError:
 # It's recommended to set API keys as environment variables for better security.
 # Example: export CHAOS_KEY='your_key_here' | You can get one for free from https://cloud.projectdiscovery.io/scans?ref=api_key
 # Example: export SHODAN_API_KEY='your_key_here'
+# You can use the default wordlist of dirsearch from https://raw.githubusercontent.com/maurosoria/dirsearch/refs/heads/master/db/dicc.txt
 # Please add the correct path to the regulator and change the Slack Webhook URL
 CHAOS_KEY = os.environ.get("CHAOS_KEY")
 SHODAN_API_KEY = os.environ.get("SHODAN_API_KEY") 
 RECON_BASE_DIR = os.path.expanduser("~/ReconAT")
 RECON_RESULTS_DIR = os.path.join(RECON_BASE_DIR, "recon-results")
 REGULATOR_DIR = os.path.expanduser("~/regulator")
-WORDLIST_PATH = os.path.expanduser("~/wordlists/directory-list-2.3-medium.txt")
+WORDLIST_PATH = os.path.expanduser("~/wordlists/dirsearch.txt")
 SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 
 def run_command(command, cwd=None, shell=False):
@@ -173,6 +174,18 @@ def send_slack_notification(message):
     except Exception as e:
         print(f"[!] Error sending Slack notification: {e}")
 
+def get_public_ip():
+    """Fetches the public IP address of the machine."""
+    print("[*] Attempting to fetch public IP address...")
+    try:
+        response = requests.get('https://api.ipify.org?format=json', timeout=5)
+        response.raise_for_status() # Raise an exception for bad status codes
+        ip = response.json()['ip']
+        print(f"[+] Successfully fetched public IP: {ip}")
+        return ip
+    except requests.exceptions.RequestException as e:
+        print(f"[!] Could not get public IP address: {e}")
+        return None
 
 def main(target):
     """Main function to run the reconnaissance process."""
@@ -206,7 +219,7 @@ def main(target):
     run_command(f"cp {all_subdomains_file} {regulator_target_file}", shell=True)
     run_command(["python3", "main.py", "-t", target, "-f", sitename, "-o", f"{sitename}.brute"], cwd=REGULATOR_DIR)
     run_command(["puredns", "resolve", f"{sitename}.brute", "--write", f"{sitename}.valid"], cwd=REGULATOR_DIR)
-    # Using python to get the difference instead of `comm`
+    # Using python to get the difference
     with open(os.path.join(REGULATOR_DIR, f"{sitename}.valid"), 'r') as f_valid, \
          open(regulator_target_file, 'r') as f_orig:
         valid_subs = set(f_valid.read().splitlines())
@@ -299,6 +312,19 @@ def main(target):
     print("\n--- Recon Scan Done! ---")
     send_slack_notification(f"The Recon Scan for {target} is completed.")
 
+    # --- Final instructions for viewing results ---
+    public_ip = get_public_ip()
+    if public_ip:
+        print("\n--- To view HTML results, follow these steps: ---")
+        print(f"1. Navigate to the results directory: cd {RECON_RESULTS_DIR}")
+        print("2. Start a simple Python web server: python3 -m http.server 8080")
+        print("\n[+] Your results will be available at:")
+        print(f"    http://{public_ip}:8080/{target}/dork_links.html")
+        print(f"    (And other .html files inside the {target}/ directory)")
+    else:
+        print("\n--- Could not fetch public IP. To view HTML results manually: ---")
+        print(f"1. Navigate to the results directory: cd {target_dir}")
+        print("2. Explore the generated HTML files locally.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
