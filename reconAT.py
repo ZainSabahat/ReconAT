@@ -20,10 +20,10 @@ except ImportError:
 # Please add the correct path to the regulator and change the Slack Webhook URL
 CHAOS_KEY = os.environ.get("CHAOS_KEY")
 SHODAN_API_KEY = os.environ.get("SHODAN_API_KEY") 
-RECON_BASE_DIR = os.path.expanduser("~/reconAT")
+RECON_BASE_DIR = os.path.expanduser("~/ReconAT")
 RECON_RESULTS_DIR = os.path.join(RECON_BASE_DIR, "recon-results")
 REGULATOR_DIR = os.path.expanduser("~/regulator")
-WORDLIST_PATH = os.path.expanduser("~/wordlists/directory-list-2.3-medium")
+WORDLIST_PATH = os.path.expanduser("~/wordlists/directory-list-2.3-medium.txt")
 SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 
 def run_command(command, cwd=None, shell=False):
