@@ -46,21 +46,25 @@ Follow these steps to set up the tool and its dependencies.
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
-cd <your-repo-directory>
+git clone https://github.com/ZainSabahat/ReconAT
+cd ReconAT
 ```
 
 ### 2. Install Python Libraries
 
-The script requires the `requests` and `shodan` Python libraries.
+The script and its dependencies require a few Python libraries.
 
 ```bash
-pip install requests shodan
+pip install requests shodan uddup
 ```
 
-### 3. Install Required Tools
+### 3.1 Install Required Tools
 
 This script is a wrapper around several powerful command-line tools. You must install all of them and ensure they are accessible in your system's `PATH`.
+
+### 3.1 Go-based Tools
+
+You can install most of these using the `go install` command.
 
 -   [**Subfinder**](https://github.com/projectdiscovery/subfinder)
 -   [**Chaos**](https://github.com/projectdiscovery/chaos-client)
@@ -69,15 +73,43 @@ This script is a wrapper around several powerful command-line tools. You must in
 -   [**Naabu**](https://github.com/projectdiscovery/naabu)
 -   [**Gau**](https://github.com/lc/gau)
 -   [**GF**](https://github.com/tomnomnom/gf)
--   [**KXSS**](https://github.com/tomnomnom/kxss)
--   [**UddUp**](https://github.com/lc/uddup)
+-   [**KXSS**](https://github.com/Emoe/kxss)
+-   [**UddUp**](https://github.com/rotemreiss/uddup)
 -   [**PureDNS**](https://github.com/d3mondev/puredns)
--   [**Dig**](https://linux.die.net/man/1/dig) (Usually pre-installed on Linux/macOS)
 
 You can typically install most of the Go-based tools using:
 ```bash
 go install -v <tool-repo-path>@latest
 ```
+
+### 3.2 Python-based Tools
+
+- **[Regulator](https://github.com/cramppet/regulator)**: The script assumes this is cloned into `~/regulator`.
+This script is a wrapper around several powerful command-line tools. You must install all of them and ensure they are accessible in your system's `PATH`.
+
+```bash
+git clone https://github.com/cramppet/regulator.git
+pip install -r ~/regulator/requirements.txt
+```
+
+### 3.3 Dependencies and Other Tools
+
+- **massdns (for PureDNS):**
+
+```bash
+git clone https://github.com/blechschmidt/massdns.git
+cd massdns
+make
+sudo make install
+```
+
+- **Resolvers List (for PureDNS):** A list of trusted DNS resolvers is required for `PureDNS`.
+
+```bash
+wget https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt -O ~/regulator/resolvers.txt
+```
+
+- **Dig:** Usually pre-installed on Linux/macOS. If not, install `dnsutils` (Debian/Ubuntu)
 
 ### 4. Configuration
 
@@ -106,7 +138,7 @@ The script will print its progress to the console and create a directory structu
 
 ### Output Structure
 
-All results will be saved in the `~/ebryx-recon/recon-results/` directory, organized by the target's name.
+All results will be saved in the `~/ReconAT/recon-results/` directory, organized by the target's name.
 
 ```
 recon-results/
