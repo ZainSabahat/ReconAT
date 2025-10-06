@@ -24,6 +24,7 @@ SHODAN_API_KEY = os.environ.get("SHODAN_API_KEY")
 RECON_BASE_DIR = os.path.expanduser("~/ReconAT")
 RECON_RESULTS_DIR = os.path.join(RECON_BASE_DIR, "recon-results")
 REGULATOR_DIR = os.path.expanduser("~/regulator")
+ORALYZER_DIR = os.path.expanduser("~/Oralyzer")
 WORDLIST_PATH = os.path.expanduser("~/wordlists/dirsearch.txt")
 SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 
@@ -292,19 +293,38 @@ def main(target):
     ])
     print("[+] Port Scan Completed.")
 
+    # --- Get Wayback URLs ---
+    print("[*] Getting Wayback URLs for parameter mining...")
+    wayback_urls_file = os.path.join(target_dir, "waybackurls.txt")
+    run_command(f"cat {alive_subdomains_file} | gau --providers wayback,commoncrawl,otx,urlscan --blacklist png,jpg,gif,ttf,woff,svg > {wayback_urls_file}", shell=True)
+
     # --- XSS Parameter Mining ---
     print("[*] Searching for potential XSS parameters...")
-    wayback_urls = os.path.join(target_dir, "waybackurls.txt")
-    param_urls = os.path.join(target_dir, "parameterized-urls.txt")
+    xss_unclean_file = os.path.join(target_dir, "parameterized-urls-xss-unclean.txt")
+    xss_clean_file = os.path.join(target_dir, "parameterized-urls-xss.txt")
     kxss_out = os.path.join(target_dir, "illegal-characters-check.txt")
 
-    run_command(f"cat {alive_subdomains_file} | gau --providers wayback | gf xss > {wayback_urls}", shell=True)
-    run_command(f"uddup -u {wayback_urls} -o {param_urls}", shell=True)
-    run_command(f"cat {param_urls} | kxss > {kxss_out}", shell=True)
-    if os.path.exists(wayback_urls):
-        os.remove(wayback_urls) # Clean up intermediate file
+    run_command(f"cat {wayback_urls_file} | gf xss > {xss_unclean_file}", shell=True)
+    run_command(f"cat {xss_unclean_file} | uro > {xss_clean_file}", shell=True)
+    run_command(f"cat {xss_clean_file} | kxss > {kxss_out}", shell=True)
+    if os.path.exists(xss_unclean_file):
+        os.remove(xss_unclean_file) # Clean up intermediate file
     print("[+] XSS parameter search completed.")
 
+    # --- Open Redirect Parameter Mining ---
+    print("[*] Searching for potential Open Redirect parameters...")
+    redirect_file_unclean = os.path.join(target_dir, "parameterized-urls-redirect-unclean.txt")
+    redirect_file_clean = os.path.join(target_dir, "parameterized-urls-redirect.txt")
+    oralyzer_py = os.path.join(ORALYZER_DIR, "oralyzer.py")
+    oralyzer_out = os.path.join(target_dir, "oralyzer_result.txt")
+
+    run_command(f"cat {wayback_urls_file} | gf redirect > {redirect_file_unclean}", shell=True)
+    run_command(f"cat {redirect_file_unclean} | uro > {redirect_file_clean}", shell=True)
+    run_command(f"python3 {oralyzer_py} -l {redirect_file_clean} -o {oralyzer_out}", shell=True)
+    if os.path.exists(redirect_file_unclean):
+        os.remove(redirect_file_unclean) # Clean up intermediate file
+    print("[+] Open Redirect parameter search completed.")
+   
     # --- Final Dorking and Cleanup ---
     generate_dork_links(target, target_dir)
 
@@ -336,11 +356,15 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # --- Pre-run Checks for command-line tools ---
-    required_tools = ["subfinder", "chaos", "httpx", "ffuf", "naabu", "gau", "gf", "uddup", "kxss", "puredns", "dig"]
-    for tool in required_tools:
-        if subprocess.run(['which', tool], capture_output=True, text=True).returncode != 0:
-            print(f"[!] Critical Error: Required tool '{tool}' is not installed or not in PATH. Please install it to continue.")
+    # --- Pre-run Checks for Python-based tools ---
+    required_scripts = {
+        "Regulator": os.path.join(REGULATOR_DIR, "main.py"),
+        "Oralyzer": os.path.join(ORALYZER_DIR, "oralyzer.py")
+    }
+    for tool_name, script_path in required_scripts.items():
+        if not os.path.isfile(script_path):
+            print(f"[!] Critical Error: Required script for '{tool_name}' not found at '{script_path}'.")
+            print(f"[!] Please ensure it is cloned and set up correctly.")
             sys.exit(1)
 
     main(args.target)
