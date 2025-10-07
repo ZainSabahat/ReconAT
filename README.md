@@ -11,7 +11,7 @@ This Python script automates the reconnaissance process for a given target domai
 -   **Virtual Host Scanning:** Scans discovered IPs for virtual hosts using **FFUF**.
 -   **Directory Brute-Forcing:** Runs directory discovery on all live subdomains with **FFUF**.
 -   **Port Scanning:** Scans all discovered subdomains for the top 1000 open ports using **Naabu**.
--   **XSS Parameter Mining:** Gathers URLs from the Wayback Machine (**gau**) and scans them for potential XSS vulnerabilities (**gf**, **kxss**).
+-   **Vulnerability Parameter Mining:** Gathers URLs from the Wayback Machine (**gau**) and scans them for potential XSS (**kxss**) and Open Redirect (**Oralyzer**) vulnerabilities.
 -   **Dorking Links:** Generates a convenient HTML file with pre-made dorking links for Google, Whoxy, and FOFA.
 -   **Slack Notifications:** Sends a notification to a specified Slack webhook upon completion of the scan.
 
@@ -34,7 +34,7 @@ Target Domain
       |
       +--> FFUF (Directory Brute-Force on Alive Subdomains)
       |
-      +--> GAU, GF, KXSS (XSS Parameter Mining)
+      +--> GAU, GF, uro, kxss, Oralyzer (Vulnerability Parameter Mining)
       |
       +--> Generate Dorking Links & Send Slack Notification
 ```
@@ -62,7 +62,7 @@ pip install requests shodan uddup
 
 This script is a wrapper around several powerful command-line tools. You must install all of them and ensure they are accessible in your system's `PATH`.
 
-### 3.1 Go-based Tools
+### 3.2 Go-based Tools
 
 You can install most of these using the `go install` command.
 
@@ -74,7 +74,6 @@ You can install most of these using the `go install` command.
 -   [**Gau**](https://github.com/lc/gau)
 -   [**GF**](https://github.com/tomnomnom/gf)
 -   [**KXSS**](https://github.com/Emoe/kxss)
--   [**UddUp**](https://github.com/rotemreiss/uddup)
 -   [**PureDNS**](https://github.com/d3mondev/puredns)
 
 You can typically install most of the Go-based tools using:
@@ -82,17 +81,43 @@ You can typically install most of the Go-based tools using:
 go install -v <tool-repo-path>@latest
 ```
 
-### 3.2 Python-based Tools
+### 3.3 Python-based Tools
 
-- **[Regulator](https://github.com/cramppet/regulator)**: The script assumes this is cloned into `~/regulator`.
-This script is a wrapper around several powerful command-line tools. You must install all of them and ensure they are accessible in your system's `PATH`.
+**Regulator**
+
+The script assumes this is cloned into `~/regulator`.
 
 ```bash
 git clone https://github.com/cramppet/regulator.git
 pip install -r ~/regulator/requirements.txt
 ```
 
-### 3.3 Dependencies and Other Tools
+**Oralyzer**
+
+The script assumes this is cloned into `~/Oralyzer`.
+
+```bash
+git clone https://github.com/r00tkie/Oralyzer.git
+pip install -r ~/Oralyzer/requirements.txt
+```
+
+**uro**
+
+```bash
+git clone https://github.com/cramppet/regulator.git
+pip install -r ~/regulator/requirements.txt
+```
+
+### 3.4 Setup GF and Gf-Patterns
+
+For `gf` to work correctly with vulnerability patterns, you need to set it up with a good pattern repository.
+
+```bash
+# Follow the complete setup guide at:
+# https://github.com/1ndianl33t/Gf-Patterns
+```
+
+### 3.5 Dependencies and Other Tools
 
 - **massdns (for PureDNS):**
 
