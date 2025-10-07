@@ -104,8 +104,7 @@ pip install -r ~/Oralyzer/requirements.txt
 **uro**
 
 ```bash
-git clone https://github.com/cramppet/regulator.git
-pip install -r ~/regulator/requirements.txt
+pip install uro
 ```
 
 ### 3.4 Setup GF and Gf-Patterns
