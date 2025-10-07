@@ -320,7 +320,7 @@ def main(target):
 
     run_command(f"cat {wayback_urls_file} | gf redirect > {redirect_file_unclean}", shell=True)
     run_command(f"cat {redirect_file_unclean} | uro > {redirect_file_clean}", shell=True)
-    run_command(f"python3 {oralyzer_py} -l {redirect_file_clean} -o {oralyzer_out}", shell=True)
+    run_command(f"python3 {oralyzer_py} -l {redirect_file_clean} > {oralyzer_out}", shell=True)
     if os.path.exists(redirect_file_unclean):
         os.remove(redirect_file_unclean) # Clean up intermediate file
     print("[+] Open Redirect parameter search completed.")
