@@ -317,10 +317,15 @@ def main(target):
     redirect_file_clean = os.path.join(target_dir, "parameterized-urls-redirect.txt")
     oralyzer_py = os.path.join(ORALYZER_DIR, "oralyzer.py")
     oralyzer_out = os.path.join(target_dir, "oralyzer_result.txt")
+    oralyzer_temp = os.path.join(target_dir, "oralyzer_raw.txt")
 
     run_command(f"cat {wayback_urls_file} | gf redirect > {redirect_file_unclean}", shell=True)
     run_command(f"cat {redirect_file_unclean} | uro > {redirect_file_clean}", shell=True)
-    run_command(f"python3 {oralyzer_py} -l {redirect_file_clean} > {oralyzer_out}", shell=True)
+    run_command(f"python3 oralyzer.py -l {redirect_file_clean} > {oralyzer_temp}", cwd=ORALYZER_DIR, shell=True)
+    run_command(f"sed -r 's/\\x1B\\[[0-9;]*[mG]//g' {oralyzer_temp} | grep -E \"Target:|\\[\\+\\]\" > {oralyzer_out}", shell=True)
+    # Clean up temporary file
+    if os.path.exists(oralyzer_temp):
+        os.remove(oralyzer_temp)
     if os.path.exists(redirect_file_unclean):
         os.remove(redirect_file_unclean) # Clean up intermediate file
     print("[+] Open Redirect parameter search completed.")
